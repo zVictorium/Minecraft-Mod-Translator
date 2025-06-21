@@ -1,0 +1,1 @@
+"""Minecraft mod translation command package."""

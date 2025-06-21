@@ -1,85 +1,94 @@
-# ⛏️ Minecraft Mod Translation Tool ⚒️
+<div align="center">
+  <img src="docs/logo/logo.png" alt="Minecraft Mod Translator Logo" width="200">
+</div>
 
-`Translate your favorite Minecraft mods into your language! 😄👍`
+# ⛏️ Minecraft Mod Translator
 
-This is a Python tool designed to assist in the translation of Minecraft mod files from one language to another. It unpacks mod JAR files, translates the language files within them, and converts the translated mod folders back to JAR files. The tool supports both JSON and LANG file formats for translations.
+A powerful tool for translating Minecraft mods into multiple languages, automating the localization process for mod developers and translators.
 
-☝️🤓 _I searched for a long time for an automatic translator of Minecraft mods into my language, but I didn't succeed, so I created these scripts myself with my knowledge of Python. It can be improved, but it does the job._
+> After searching extensively for an automatic translator for Minecraft mods without success, I developed this solution to address this need. While there is room for improvement, it effectively serves its purpose of making mods accessible across language barriers.
 
-## 💡 Getting Started
+## 🚀 Features
 
-1. Clone this repository to your local machine.
+- **Automated Translation**: Quickly translate mod files to multiple languages
+- **JSON & LANG Support**: Compatible with Minecraft's localization file formats
+- **Multiple Translation Services**: Support for free translation
+- **Batch Processing**: Translate single files or entire mod folders at once
 
-2. modify the `config.json` file to specify your source and target languages, paths, and other settings.
+## 🛠️ Installation
 
-3. Run the `start.sh` (Linux) or `start.bat` (Windows) files to start the translation process.
-   
-    If it does not work, follow the next steps:
+### Option 1: Pre-built Executables (Easiest)
 
-    1. Install the required dependencies using the following command:
+Download ready-to-use executable files from the [Releases Page](https://github.com/zvictorium/minecraft-mod-translator/releases):
 
-        ```shell
-        pip install -r requirements.txt
-        ```
-      
-    2. Run the `main.py` script to start the translation process:
+- **App Version**: Download `Minecraft Mod Translator.exe` (Interactive application)
+- **CLI Version**: Download `mod-translator.exe` (Command-line interface)
 
-        ```shell
-        python main.py
-        ```
+Simply download and run - no Python installation required!
 
-## ⚙️ Configuration
+### Option 2: From Source (For Developers)
 
-The `config.json` file contains settings that control how the translation tool operates. Here's an example of the default configuration:
+```bash
+# Clone or download the project
+git clone https://github.com/zvictorium/minecraft-mod-translator.git
+cd minecraft-mod-translator
 
-```json
-{
-  "original_language": "en_us",
-  "target_language": "es_es",
-  "mods_path": "mods",
-  "translation_path": "mods/translated",
-  "replace_original_mods": false
-}
+# Setup the environment (Windows)
+setup.bat
+# Or for Linux/Mac
+./setup.sh
+
+# Run the application (Windows)
+start.bat
+# Or for Linux/Mac
+./start.sh
 ```
 
-- `original_language`: The language code of the source Minecraft language files. [**Minecraft Language List**](https://minecraft-archive.fandom.com/wiki/Languages)
-- `target_language`: The language code of the target language for translation. [**Minecraft Language List**](https://minecraft-archive.fandom.com/wiki/Languages)
-- `mods_path`: The path to the directory containing the original mod JAR files. You can use _**%appdata%**_.
-- `translation_path`: The path where translated mod files will be stored. You can use _**%appdata%**_.
-- `replace_original_mods`: Set this to `true` if you want to replace the original mod files with the translated versions.
+## 🎯 Usage
 
-## 📄 Project Structure
+### Interactive Mode (Recommended)
 
-The project is organized into the following files and directories:
+```bash
+mod-translator app
+```
 
-- `main.py`: The main script that orchestrates the translation process.
-- `scripts/logs.py`: Contains functions for logging messages and titles.
-- `scripts/settings.py`: Responsible for managing configuration settings.
-- `scripts/translator.py`: Defines the `Translator` class for language translation.
-- `scripts/file_manager.py`: Responsible for managing mod file operations.
-- `config.json`: Configuration file specifying translation settings.
-- `requirements.txt`: Lists the required Python packages for the project.
+### Command Line Interface
 
-## 👨‍💻 Usage
+```bash
+# Basic usage
+mod-translator --path path/to/mods --source en_US --target es_ES --output path/to/output
 
-1. The `main.py` script is the entry point. It reads the configuration settings, creates necessary folders, translates mod files, and performs the conversion.
+# Parameters:
+# --path (-p): Path to mod or mods folder (default: ./mods)
+# --source (-s): Source language code (e.g., en_US)
+# --target (-t): Target language code (e.g., es_ES)
+# --output (-o): Output folder path (if same as mods path, will replace original mods)
+```
 
-2. The `settings.py` file contains the `Settings` class, which handles configuration reading and processing.
+## 📸 Screenshots
 
-3. The `translator.py` file defines the `Translator` class used for text translation.
+### Main Application
+![Main Application](docs/screenshots/main-app.png)
 
-4. The `file_manager.py` file contains the `FileManager` class that handles unpacking, translation, and conversion of mod files.
+### Confirmation
+![Confirmation](docs/screenshots/confirmation.png)
 
-## 🤝 Contributing
+### Translation Process
+![Translation Process](docs/screenshots/translation-process.png)
 
-Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request. You could edit the `Translator` class to implement GPT translation... 😉
+### Results View
+![Results View](docs/screenshots/results-view.png)
 
-## ⚖️ License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the [**Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)**](LICENSE).
+
+## 🙋 Support
+
+- **🐙 Repository**: [https://github.com/zvictorium/minecraft-mod-translator](https://github.com/zvictorium/minecraft-mod-translator)
+- **📋 Issues**: [Report bugs or request features](https://github.com/zvictorium/minecraft-mod-translator/issues)
+- **📦 Releases**: [Download latest version](https://github.com/zvictorium/minecraft-mod-translator/releases)
 
 ---
 
-_Made with_ ❤️ _by [zVictörium](https://zvictorium.github.io)._
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/victorium)
+**Made with ❤️ for Minecraft modders and the community**
