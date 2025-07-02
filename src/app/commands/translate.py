@@ -105,26 +105,126 @@ def parse_json_with_comments(file_path: str) -> Dict[str, Any]:
 class Translator:
     """
     A class for translating text data from a source language to a target language.
+    Supports both Google Translate and OpenAI translation.
     """
 
     def __init__(
-        self, source_language: str, target_language: str, capitalize: bool = True
+        self, source_language: str, target_language: str, capitalize: bool = True, use_openai: bool = False
     ):
         self.source_language = source_language
         self.target_language = target_language
         self.capitalize = capitalize
+        self.use_openai = use_openai
+        
+        if self.use_openai:
+            self._setup_openai()
+
+    def _setup_openai(self):
+        """Setup OpenAI client for AI translation"""
+        try:
+            from openai import OpenAI
+            
+            # Load environment variables from .env file
+            try:
+                from dotenv import load_dotenv
+                # Try to load from current working directory and project root
+                load_dotenv()  # Load from current directory
+                load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env'))  # Load from project root
+                log_message("📄 Loaded .env configuration")
+            except ImportError:
+                log_message("⚠️ python-dotenv not found. Using system environment variables.")
+            
+            self.api_key = os.getenv("OPENAI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "OPENAI_API_KEY environment variable not set.\n"
+                    "Please:\n"
+                    "1. Set OPENAI_API_KEY environment variable, or\n"
+                    "2. Create a .env file with: OPENAI_API_KEY=your_key_here"
+                )
+            
+            self.openai_client = OpenAI(api_key=self.api_key)
+            self.model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+            log_message(f"🤖 OpenAI initialized with model: {self.model}")
+            
+        except ImportError:
+            raise ImportError("OpenAI package not found. Install with: pip install openai python-dotenv")
+
+    def _translate_with_openai(self, text: str) -> str:
+        """Translate text using OpenAI"""
+        if not text.strip():
+            return text
+            
+        try:
+            system_prompt = f"""You are a professional translator specializing in video game localization.
+            Translate from {self.source_language} to {self.target_language}.
+            
+            Guidelines:
+            - Preserve formatting like %s, %d, {{}} placeholders
+            - Maintain gaming-appropriate tone
+            - Use natural, idiomatic expressions
+            - Keep technical terms consistent
+            
+            Respond with ONLY the translated text, no explanations."""
+            
+            completion = self.openai_client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Translate: {text}"}
+                ],
+                temperature=0.3,
+                max_tokens=500
+            )
+            
+            translated_text = completion.choices[0].message.content.strip()
+            
+            if self.capitalize and translated_text:
+                translated_text = translated_text.capitalize()
+                
+            return translated_text
+            
+        except Exception as e:
+            log_message(f"OpenAI translation error for '{text}': {e}")
+            return text  # Return original on error
 
     def translate_data(self, data: Dict[str, str]) -> Dict[str, str]:
         """
         Translate data from source to target language.
         """
+        translation_service = "OpenAI" if self.use_openai else "Google Translate"
+        log_message(f"Translating {len(data)} entries from {self.source_language} to {self.target_language} using {translation_service}...")
+
+        if self.use_openai:
+            return self._translate_data_openai(data)
+        else:
+            return self._translate_data_google(data)
+
+    def _translate_data_openai(self, data: Dict[str, str]) -> Dict[str, str]:
+        """Translate data using OpenAI"""
+        translated_data = {}
+        
+        for key, text in data.items():
+            if not text or not isinstance(text, str):
+                translated_data[key] = text
+                continue
+
+            try:
+                translated_text = self._translate_with_openai(text)
+                log_message(f'🤖 "{text}" → "{translated_text}"')
+                translated_data[key] = translated_text
+            except Exception as e:
+                log_message(f'Error translating "{text}": {str(e)}')
+                translated_data[key] = text
+
+        log_message(f"Successfully translated {len(data)} entries using OpenAI")
+        return translated_data
+
+    def _translate_data_google(self, data: Dict[str, str]) -> Dict[str, str]:
+        """Translate data using Google Translate"""
         try:
             # Import here to avoid dependency issues if not used
             from deep_translator import GoogleTranslator
-
-            log_message(
-                f"Translating {len(data)} entries from {self.source_language} to {self.target_language}..."
-            )
 
             translated_data = {}
             translator = GoogleTranslator(
@@ -141,17 +241,17 @@ class Translator:
                     translated_text = translator.translate(text)
                     if self.capitalize and translated_text:
                         translated_text = translated_text.capitalize()
-                    log_message(f'Translation: "{text}" → "{translated_text}"')
+                    log_message(f'🌐 "{text}" → "{translated_text}"')
                     translated_data[key] = translated_text
                 except Exception as e:
                     log_message(f'Error translating "{text}": {str(e)}')
                     translated_data[key] = text  # Keep original on error
 
-            log_message(f"Successfully translated {len(data)} entries")
+            log_message(f"Successfully translated {len(data)} entries using Google Translate")
             return translated_data
         except ImportError:
-            print("Error: deep_translator package is required for translation.")
-            print("Please install it with: pip install deep_translator")
+            print("Error: deep_translator package is required for Google translation.")
+            print("Please install it with: pip install deep-translator")
             return data
 
     def translate(self, string: str) -> str:
@@ -161,6 +261,13 @@ class Translator:
         if not string or not isinstance(string, str):
             return string
 
+        if self.use_openai:
+            return self._translate_with_openai(string)
+        else:
+            return self._translate_with_google(string)
+
+    def _translate_with_google(self, string: str) -> str:
+        """Translate string using Google Translate"""
         try:
             from deep_translator import GoogleTranslator
 
@@ -172,8 +279,8 @@ class Translator:
                 translated_string = translated_string.capitalize()
             return translated_string
         except ImportError:
-            print("Error: deep_translator package is required for translation.")
-            print("Please install it with: pip install deep_translator")
+            print("Error: deep_translator package is required for Google translation.")
+            print("Please install it with: pip install deep-translator")
             return string
         except Exception as e:
             log_message(f'Error translating "{string}": {str(e)}')
@@ -194,10 +301,24 @@ class Settings:
         self.mods_path = "./"
         self.temp_path = "temp"
         self.translation_path = "./translated"
+        self.use_ai = False  # Default to Google Translate
 
         # Override with CLI arguments if provided
         if cli_args:
             if hasattr(cli_args, "source") and cli_args.source:
+                self.source_mc_lang = self._format_lang(cli_args.source)
+
+            if hasattr(cli_args, "target") and cli_args.target:
+                self.target_mc_lang = self._format_lang(cli_args.target)
+
+            if hasattr(cli_args, "path") and cli_args.path:
+                self.mods_path = cli_args.path
+
+            if hasattr(cli_args, "output") and cli_args.output:
+                self.translation_path = cli_args.output
+                
+            if hasattr(cli_args, "ai") and cli_args.ai:
+                self.use_ai = True
                 self.source_mc_lang = self._format_lang(cli_args.source)
 
             if hasattr(cli_args, "target") and cli_args.target:
@@ -252,9 +373,26 @@ class FileManager:
         self.source_mc_lang = settings.source_mc_lang
         self.target_mc_lang = settings.target_mc_lang
 
-        self.translator = Translator(
-            settings.source_google_lang, settings.target_google_lang
-        )
+        # Choose translator based on settings
+        if settings.use_ai:
+            log_message("🤖 Using OpenAI translator...")
+            try:
+                self.translator = Translator(
+                    settings.source_google_lang, 
+                    settings.target_google_lang,
+                    use_openai=True
+                )
+            except (ImportError, ValueError) as e:
+                log_message(f"❌ OpenAI initialization failed: {e}")
+                log_message("🔄 Falling back to Google Translate...")
+                self.translator = Translator(
+                    settings.source_google_lang, settings.target_google_lang
+                )
+        else:
+            log_message("🌐 Using Google Translate...")
+            self.translator = Translator(
+                settings.source_google_lang, settings.target_google_lang
+            )
 
     def create_needed_folders(self) -> None:
         """
@@ -860,6 +998,9 @@ def add_translate_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-s", "--source", help="Source language code (e.g., en_US)")
     parser.add_argument("-t", "--target", help="Target language code (e.g., es_ES)")
     parser.add_argument("-o", "--output", help="Output folder path")
+    parser.add_argument(
+        "--ai", action="store_true", help="Use OpenAI translation instead of Google Translate"
+    )
 
 
 def handle_translate_command(args: argparse.Namespace) -> None:
@@ -870,13 +1011,44 @@ def handle_translate_command(args: argparse.Namespace) -> None:
         args: ArgumentParser arguments
     """
     try:
-        # Check if deep_translator is installed
-        try:
-            from deep_translator import GoogleTranslator
-        except ImportError:
-            print("Error: deep_translator package is required for translation.")
-            print("Please install it with: pip install deep_translator")
-            return
+        # Check if AI translation is requested
+        if hasattr(args, "ai") and args.ai:
+            log_message("🤖 AI translation mode enabled")
+            # Check if OpenAI dependencies are available
+            try:
+                import openai
+                # Try to load .env file first
+                try:
+                    from dotenv import load_dotenv
+                    load_dotenv()  # This loads the .env file from current directory
+                    log_message("📄 Loaded .env file")
+                except ImportError:
+                    log_message("⚠️ python-dotenv not found, using system environment variables")
+                
+                # Now check for API key after loading .env
+                api_key = os.getenv("OPENAI_API_KEY")
+                if not api_key:
+                    print("❌ Error: OPENAI_API_KEY environment variable not set.")
+                    print("Please set your OpenAI API key:")
+                    print("1. Set OPENAI_API_KEY environment variable, or")
+                    print("2. Create a .env file with: OPENAI_API_KEY=your_key_here")
+                    print("3. Make sure the .env file is in the project root directory")
+                    return
+                else:
+                    log_message(f"✅ OpenAI API key found (length: {len(api_key)} characters)")
+                    
+            except ImportError:
+                print("❌ Error: OpenAI package not found.")
+                print("Please install it with: pip install openai python-dotenv")
+                return
+        else:
+            # Check if deep_translator is installed for Google Translate
+            try:
+                from deep_translator import GoogleTranslator
+            except ImportError:
+                print("Error: deep_translator package is required for translation.")
+                print("Please install it with: pip install deep_translator")
+                return
         
         # Create settings with CLI arguments
         settings = Settings(cli_args=args)

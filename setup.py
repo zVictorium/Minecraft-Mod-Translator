@@ -18,4 +18,10 @@ setup(
         "questionary>=1.10.0",
         "pyfiglet>=0.8.post1",
     ],
+    extras_require={
+        'ai': [
+            'openai>=1.0.0',
+            'python-dotenv>=0.19.0',
+        ],
+    },
 )

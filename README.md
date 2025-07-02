@@ -11,8 +11,9 @@ A powerful tool for translating Minecraft mods into multiple languages, automati
 ## 🚀 Features
 
 - **Automated Translation**: Quickly translate mod files to multiple languages
+- **AI-Powered Translation**: Optional OpenAI integration for higher quality translations  
 - **JSON & LANG Support**: Compatible with Minecraft's localization file formats
-- **Multiple Translation Services**: Support for free translation
+- **Multiple Translation Services**: Support for Google Translate (free) and OpenAI (API key required)
 - **Batch Processing**: Translate single files or entire mod folders at once
 
 ## 🛠️ Installation
@@ -38,6 +39,11 @@ setup.bat
 # Or for Linux/Mac
 ./setup.sh
 
+# For AI translation support, install additional dependencies:
+pip install openai python-dotenv
+# Or install everything with:
+pip install -e .[ai]
+
 # Run the application (Windows)
 start.bat
 # Or for Linux/Mac
@@ -55,15 +61,37 @@ mod-translator app
 ### Command Line Interface
 
 ```bash
-# Basic usage
+# Basic usage with Google Translate (free)
 mod-translator --path path/to/mods --source en_US --target es_ES --output path/to/output
+
+# AI-powered translation with OpenAI (requires API key)
+mod-translator --path path/to/mods --source en_US --target es_ES --output path/to/output --ai
 
 # Parameters:
 # --path (-p): Path to mod or mods folder (default: ./mods)
 # --source (-s): Source language code (e.g., en_US)
 # --target (-t): Target language code (e.g., es_ES)
 # --output (-o): Output folder path (if same as mods path, will replace original mods)
+# --ai: Use OpenAI translation instead of Google Translate (requires OPENAI_API_KEY)
 ```
+
+### 🤖 AI Translation Setup
+
+To use OpenAI-powered translation for higher quality results:
+
+1. **Get an OpenAI API key**: Visit [OpenAI API](https://platform.openai.com/api-keys)
+2. **Set up environment**: Create a `.env` file in the project root:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   OPENAI_MODEL=gpt-3.5-turbo
+   ```
+3. **Install dependencies**: 
+   ```bash
+   pip install openai python-dotenv
+   ```
+4. **Use the --ai flag** when running translations
+
+> **Note**: OpenAI translation provides better context awareness and gaming-specific terminology but requires an API key with usage costs.
 
 ## 📸 Screenshots
 
