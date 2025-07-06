@@ -373,13 +373,16 @@ def run_translation(params: Dict[str, Any]) -> None:
                     setattr(self, key, value)
         
         args = Args(**params)
-          # Create progress display
+        
+        # Create progress display
         with Progress(
             SpinnerColumn(style="red"),
             TextColumn("[bold red]{task.description}"),
             console=console
         ) as progress:
-            task = progress.add_task("[red]Unpacking mod files...", total=None)# Define custom logging functions to update progress
+            task = progress.add_task("[red]Unpacking mod files...", total=None)
+            
+            # Define custom logging functions to update progress
             def custom_log_title(message):
                 progress.update(task, description=f"[bold red]{message}")
             
@@ -404,7 +407,7 @@ def run_translation(params: Dict[str, Any]) -> None:
                 # Silently exit on Ctrl+C without showing any error message
                 sys.exit(0)
                 
-          # Show completion message with panel
+        # Show completion message with panel
         success_message = "[bold]Translation completed successfully![/bold]\n"
         success_message += f"Translated mods can be found at: [white]{params['output']}[/white]"
         
@@ -415,6 +418,7 @@ def run_translation(params: Dict[str, Any]) -> None:
             title_align="center",
             box=box.DOUBLE
         ))
+        
     except KeyboardInterrupt:
         # Silently exit on Ctrl+C without showing any error message
         sys.exit(0)
@@ -445,6 +449,8 @@ def main() -> None:
                 title_align="center",
                 box=box.DOUBLE
             ))
+            console.print()
+            input("Press Enter to exit...")
             return
         
         params = get_user_input()
@@ -472,6 +478,8 @@ def main() -> None:
                         title_align="center",
                         box=box.DOUBLE
                     ))
+                    console.print()
+                    input("Press Enter to exit...")
                     return
             except ImportError:
                 console.print(Panel(
@@ -482,9 +490,16 @@ def main() -> None:
                     title_align="center",
                     box=box.DOUBLE
                 ))
+                console.print()
+                input("Press Enter to exit...")
                 return
         
         run_translation(params)
+        
+        # Add pause before closing (especially useful for compiled executable)
+        console.print()
+        input("Press Enter to exit...")
+        
     except KeyboardInterrupt:
         # Silently exit on Ctrl+C without showing any error message
         sys.exit(0)
@@ -497,6 +512,10 @@ def main() -> None:
             box=box.DOUBLE
         ))
         console.print_exception()
+        
+        # Add pause before closing even on error
+        console.print()
+        input("Press Enter to exit...")
 
 if __name__ == "__main__":
     main()
