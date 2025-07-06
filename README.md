@@ -120,3 +120,5 @@ This project is licensed under the [**Creative Commons Attribution-NonCommercial
 ---
 
 **Made with ❤️ for Minecraft modders and the community**
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/victorium)
