@@ -4,7 +4,7 @@
 <div align="center">
    <table>
       <tr>
-         <td align="center" style="padding: 20px;">
+         <td align="center" style="padding: 20px; border-radius: 15px; border: none;">
             <h3>🌐 Minecraft Mod Translator</h3>
             <p><em>Easy online tool for Minecraft mod translation</em></p>
             <p>⏳ Don't waste your time • 🌍 90 languages • 🪙 50 free coins</p>
