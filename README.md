@@ -1,20 +1,14 @@
 <div align="center">
   <img src="docs/logo/logo.png" alt="Minecraft Mod Translator Logo" width="200">
-</div>
-
-<div align="center">
-   <table>
-      <tr>
-         <td align="center" style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px;">
-            <h4>🌐 Minecraft Mod Translator Online</h4>
-            <p><em>Easy online tool for Minecraft mod translation</em></p>
-            <p>✅ No compilation needed • 🌍 90 languages • 🪙 50 free coins</p>
-            <a href="https://mc-translator.net">
-               <img src="https://img.shields.io/badge/Get%20Started-Click%20Here-blue?style=for-the-badge" alt="Get Started">
-            </a>
-         </td>
-      </tr>
-   </table>
+<div align="center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 16px; margin: 20px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+   <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+      <h3 style="margin: 0 0 8px 0; color: #1f2937; font-weight: 600;">🌐 Minecraft Mod Translator Online</h3>
+      <p style="margin: 0 0 12px 0; color: #6b7280; font-style: italic;">Easy online tool for Minecraft mod translation</p>
+      <p style="margin: 0 0 16px 0; color: #374151; font-size: 14px;">✅ No compilation needed • 🌍 90 languages • 🪙 50 free coins</p>
+      <a href="https://mc-translator.net" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: transform 0.2s;">
+         🚀 Get Started - Click Here
+      </a>
+   </div>
 </div>
 
 ---
