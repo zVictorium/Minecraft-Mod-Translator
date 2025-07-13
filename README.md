@@ -2,7 +2,7 @@
 ---
 
 <div align="center">
-   <table>
+   <table style="border: none;">
       <tr>
          <td align="center" style="padding: 20px; border-radius: 15px; border: none;">
             <h3>🌐 Minecraft Mod Translator</h3>
