@@ -1,10 +1,13 @@
+
+---
+
 <div align="center">
    <table>
       <tr>
          <td align="center" style="padding: 20px;">
-            <h3>🌐 Minecraft Mod Translator Online</h3>
+            <h3>🌐 Minecraft Mod Translator</h3>
             <p><em>Easy online tool for Minecraft mod translation</em></p>
-            <p>✅ No compilation needed • 🌍 90 languages • 🪙 50 free coins</p>
+            <p>⏳ Don't waste your time • 🌍 90 languages • 🪙 50 free coins</p>
             <a href="https://mc-translator.net">
                <img src="https://img.shields.io/badge/_Get_Started-Click_Here-blue?style=for-the-badge&logo=rocket" alt="Get Started">
             </a>
