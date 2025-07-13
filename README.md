@@ -2,6 +2,58 @@
   <img src="docs/logo/logo.png" alt="Minecraft Mod Translator Logo" width="200">
 </div>
 
+---
+
+<div style="
+  max-width: 350px;
+  margin: 16px auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-align: center;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+">
+  <h4 style="
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 6px 0;
+  ">
+    Minecraft Mod Translator
+  </h4>
+  <p style="
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+  ">
+    Easy online tool for Minecraft mod translation.<br>
+    No compilation needed • 90 languages • 50 free coins
+  </p>
+  <a href="https://mc-translator.net" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     style="
+       display: inline-block;
+       background: #111827;
+       color: white;
+       text-decoration: none;
+       font-weight: 500;
+       font-size: 12px;
+       padding: 6px 12px;
+       border-radius: 4px;
+       transition: background 0.2s ease;
+     "
+     onmouseover="this.style.background='#374151'"
+     onmouseout="this.style.background='#111827'">
+    Get Started →
+  </a>
+</div>
+
+---
+
 # ⛏️ Minecraft Mod Translator
 
 A powerful tool for translating Minecraft mods into multiple languages, automating the localization process for mod developers and translators.
