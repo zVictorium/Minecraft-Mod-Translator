@@ -32,9 +32,10 @@ A powerful tool for translating Minecraft mods into multiple languages, automati
 
 - **Automated Translation**: Quickly translate mod files to multiple languages
 - **AI-Powered Translation**: Optional OpenAI integration for higher quality translations  
-- **JSON & LANG Support**: Compatible with Minecraft's localization file formats
+- **Comprehensive File Support**: Compatible with JSON, LANG, and MCFUNCTION file formats
 - **Multiple Translation Services**: Support for Google Translate (free) and OpenAI (API key required)
 - **Batch Processing**: Translate single files or entire mod folders at once
+- **Smart Text Detection**: Automatically identifies translatable content while preserving game logic
 
 ## 🛠️ Installation
 

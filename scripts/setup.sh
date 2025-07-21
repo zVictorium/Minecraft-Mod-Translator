@@ -8,15 +8,6 @@ echo
 # Change to project root directory
 cd "$(dirname "$0")/.."
 
-# Upgrade pip to latest version
-echo "Upgrading pip to latest version..."
-python3 -m pip install --upgrade pip
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to upgrade pip!"
-    exit 1
-fi
-echo "Pip upgraded successfully."
-
 # Create virtual environment
 echo "Creating virtual environment..."
 python3 -m venv .venv
@@ -34,6 +25,15 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 echo "Virtual environment activated successfully."
+
+# Upgrade pip within the virtual environment
+echo "Upgrading pip to latest version within virtual environment..."
+pip install --upgrade pip
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to upgrade pip!"
+    exit 1
+fi
+echo "Pip upgraded successfully."
 
 # Install requirements
 echo "Installing dependencies..."

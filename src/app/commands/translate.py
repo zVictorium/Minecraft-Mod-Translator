@@ -14,6 +14,7 @@ from typing import Dict, List, Any
 JAR = ".jar"
 JSON = ".json"
 LANG = ".lang"
+MCFUNCTION = ".mcfunction"
 DISABLE_LOGS = False
 
 # Logging functions
@@ -416,7 +417,7 @@ class FileManager:
 
     def get_lang_folders(self) -> List[str]:
         """
-        Get all language folder paths.
+        Get all language folder paths and mcfunction root folders.
         """
         lang_folders = []
         found_files = []
@@ -464,6 +465,12 @@ class FileManager:
                     )
                     log_message(f"Using parent folder: {parent_folder}")
 
+        # Also search for .mcfunction files and add their root mod folders
+        mcfunction_folders = self.get_mcfunction_folders()
+        for folder in mcfunction_folders:
+            if folder not in lang_folders:
+                lang_folders.append(folder)
+
         if not lang_folders:
             log_message(
                 f"Warning: No language folders found containing {self.source_mc_lang} files"
@@ -476,6 +483,34 @@ class FileManager:
                     log_message(f"    Contents: {os.listdir(dirpath)}")
 
         return lang_folders
+
+    def get_mcfunction_folders(self) -> List[str]:
+        """
+        Get all mod root folders that contain .mcfunction files.
+        """
+        mcfunction_folders = []
+        log_message(f"Searching for .mcfunction files in {self.temp_path}...")
+
+        # Find all .mcfunction files in the extracted mods
+        for foldername, _, filenames in os.walk(self.temp_path):
+            for filename in filenames:
+                if filename.endswith(MCFUNCTION):
+                    # Get the mod root folder (first level under temp_path)
+                    path_parts = foldername.split(os.sep)
+                    temp_parts = self.temp_path.split(os.sep)
+                    
+                    # Find the mod root - it's the directory immediately under temp_path
+                    if len(path_parts) > len(temp_parts):
+                        mod_root_parts = temp_parts + [path_parts[len(temp_parts)]]
+                        mod_root = os.sep.join(mod_root_parts)
+                        
+                        if mod_root not in mcfunction_folders:
+                            mcfunction_folders.append(mod_root)
+                            mod_name = path_parts[len(temp_parts)] if len(path_parts) > len(temp_parts) else "unknown"
+                            log_message(f"Found mod with .mcfunction files: {mod_name}")
+                            break  # No need to continue checking this folder
+
+        return mcfunction_folders
 
     def edit_lang_files(self, lang_folders: List[str]) -> None:
         """
@@ -597,6 +632,17 @@ class FileManager:
             if not files_processed:
                 log_message(f"No translatable language files found for {mod_name}")
 
+            # Check if this is a mod root folder and process .mcfunction files
+            # A mod root folder is directly under temp_path
+            temp_path_parts = self.temp_path.split(os.sep)
+            lang_folder_parts = lang_folder.split(os.sep)
+            
+            # Check if this folder is a mod root (temp_path + one level)
+            if len(lang_folder_parts) == len(temp_path_parts) + 1:
+                log_subtitle(f"Checking for .mcfunction files in {mod_name}...")
+                self.translate_mcfunction_files(lang_folder)
+                files_processed = True
+
     # Removed _translate_mod function as it's no longer needed
 
     def _read_json_file(self, path: str) -> Dict[str, str]:
@@ -683,6 +729,108 @@ class FileManager:
                 log_message(f"WARNING: Failed to create file {path}")
         except Exception as e:
             log_message(f"ERROR writing LANG file: {str(e)}")
+
+    def _read_mcfunction_file(self, path: str) -> Dict[str, str]:
+        """
+        Read MCFUNCTION file and extract translatable text from data modify storage commands.
+        Returns a dictionary where keys are unique identifiers and values are the translatable text.
+        """
+        data = {}
+        try:
+            with open(path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
+            
+            for line_num, line in enumerate(lines, 1):
+                line = line.strip()
+                # Look for data modify storage commands with quoted text
+                if "data modify storage" in line and "set value" in line:
+                    # Extract text between double quotes, handling escaped quotes
+                    # This regex matches the content between quotes, handling escaped quotes
+                    match = re.search(r'set value "([^"\\]*(?:\\.[^"\\]*)*)"', line)
+                    if match:
+                        text = match.group(1)
+                        # Unescape the text for translation
+                        text = text.replace('\\"', '"')
+                        # Use file path and line number as unique key
+                        key = f"{path}:{line_num}"
+                        data[key] = text
+                        
+            log_message(f"Extracted {len(data)} translatable strings from {path}")
+            return data
+        except Exception as e:
+            log_message(f"Error reading MCFUNCTION file {path}: {str(e)}")
+            return {}
+
+    def _write_mcfunction_file(self, original_path: str, translated_data: Dict[str, str]) -> None:
+        """
+        Write MCFUNCTION file with translated text, preserving the original structure.
+        """
+        try:
+            log_message(f"Writing MCFUNCTION file to {original_path}")
+            
+            with open(original_path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
+            
+            # Process each line and replace translatable text
+            for line_num, line in enumerate(lines):
+                original_line = line.strip()
+                if "data modify storage" in original_line and "set value" in original_line:
+                    # Find the corresponding translated text
+                    key = f"{original_path}:{line_num + 1}"
+                    if key in translated_data:
+                        # Replace the quoted text with translated version
+                        translated_text = translated_data[key]
+                        # Escape any quotes in the translated text
+                        escaped_text = translated_text.replace('"', '\\"')
+                        # Replace the original quoted text with translated text
+                        # This regex handles escaped quotes properly
+                        new_line = re.sub(r'(set value )"([^"\\]*(?:\\.[^"\\]*)*)"', f'\\1"{escaped_text}"', line)
+                        lines[line_num] = new_line
+            
+            # Write the modified content back to the file
+            with open(original_path, "w", encoding="utf-8") as file:
+                file.writelines(lines)
+                
+            file_size = os.path.getsize(original_path)
+            log_message(f"MCFUNCTION file successfully updated ({file_size} bytes)")
+        except Exception as e:
+            log_message(f"ERROR writing MCFUNCTION file: {str(e)}")
+
+    def translate_mcfunction_files(self, mod_root_path: str) -> None:
+        """
+        Find and translate all .mcfunction files in a mod.
+        """
+        mcfunction_files = []
+        
+        # Find all .mcfunction files in the mod
+        for foldername, _, filenames in os.walk(mod_root_path):
+            for filename in filenames:
+                if filename.endswith(MCFUNCTION):
+                    file_path = os.path.join(foldername, filename)
+                    mcfunction_files.append(file_path)
+        
+        if not mcfunction_files:
+            return
+            
+        log_message(f"Found {len(mcfunction_files)} .mcfunction files to translate")
+        
+        # Process each mcfunction file
+        for file_path in mcfunction_files:
+            log_message(f"Processing {file_path}")
+            
+            # Read translatable text from the file
+            original_data = self._read_mcfunction_file(file_path)
+            
+            if original_data:
+                # Translate the extracted text
+                translated_data = self.translator.translate_data(original_data)
+                
+                # Write back the translated content
+                self._write_mcfunction_file(file_path, translated_data)
+                
+                log_message(f"Successfully translated {len(original_data)} strings in {file_path}")
+            else:
+                log_message(f"No translatable content found in {file_path}")
 
     def convert_translated_mods(self) -> None:
         """

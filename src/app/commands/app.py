@@ -171,7 +171,7 @@ def get_user_input() -> Dict[str, Any]:
         
         # Get the mods path
         mods_path = questionary.text(
-            "Path to mod or mods folder:",
+            "Path to mods folder:",
             default=os.path.join(os.getcwd(), "mods"),
             style=QUESTIONARY_STYLE
         ).ask()
