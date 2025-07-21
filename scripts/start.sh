@@ -22,5 +22,5 @@ mod-translator app "$@"
 
 # Add a pause at the end so the terminal doesn't close immediately
 echo
-echo Press any key to exit...
+echo Press Enter to exit...
 read

@@ -26,5 +26,5 @@ mod-translator app %*
 
 :: Add a pause at the end so the window doesn't close immediately
 echo.
-echo Press any key to exit...
+echo Press Enter to exit...
 pause > nul

@@ -10,6 +10,13 @@ import argparse
 from zipfile import ZipFile, ZIP_DEFLATED
 from typing import Dict, List, Any
 
+# Import retry logic utilities
+from ..utils.retry_logic import (
+    create_retry_decorator, 
+    global_rate_limiter,
+    TranslationRateLimiter
+)
+
 # Constants
 JAR = ".jar"
 JSON = ".json"
@@ -117,6 +124,10 @@ class Translator:
         self.capitalize = capitalize
         self.use_openai = use_openai
         
+        # Initialize retry decorators for both services
+        self.google_retry = create_retry_decorator('google', max_retries=3)
+        self.openai_retry = create_retry_decorator('openai', max_retries=3)
+        
         if self.use_openai:
             self._setup_openai()
 
@@ -152,11 +163,16 @@ class Translator:
             raise ImportError("OpenAI package not found. Install with: pip install openai python-dotenv")
 
     def _translate_with_openai(self, text: str) -> str:
-        """Translate text using OpenAI"""
+        """Translate text using OpenAI with retry logic and rate limiting"""
         if not text.strip():
             return text
+        
+        # Apply the retry decorator to the actual translation call
+        @self.openai_retry
+        def _do_openai_translation(text: str) -> str:
+            # Apply preventive delay to avoid rate limits
+            global_rate_limiter.apply_service_delay('openai')
             
-        try:
             system_prompt = f"""You are a professional translator specializing in video game localization.
             Translate from {self.source_language} to {self.target_language}.
             
@@ -184,9 +200,11 @@ class Translator:
                 translated_text = translated_text.capitalize()
                 
             return translated_text
-            
+        
+        try:
+            return _do_openai_translation(text)
         except Exception as e:
-            log_message(f"OpenAI translation error for '{text}': {e}")
+            log_message(f"OpenAI translation failed after all retries for '{text}': {e}")
             return text  # Return original on error
 
     def translate_data(self, data: Dict[str, str]) -> Dict[str, str]:
@@ -202,18 +220,27 @@ class Translator:
             return self._translate_data_google(data)
 
     def _translate_data_openai(self, data: Dict[str, str]) -> Dict[str, str]:
-        """Translate data using OpenAI"""
-        translated_data = {}
+        """Translate data using OpenAI with rate limiting protection"""
+        import time
         
-        for key, text in data.items():
+        translated_data = {}
+        total_items = len(data)
+        
+        for index, (key, text) in enumerate(data.items(), 1):
             if not text or not isinstance(text, str):
                 translated_data[key] = text
                 continue
 
             try:
                 translated_text = self._translate_with_openai(text)
-                log_message(f'🤖 "{text}" → "{translated_text}"')
+                log_message(f'🤖 [{index}/{total_items}] "{text}" → "{translated_text}"')
                 translated_data[key] = translated_text
+                
+                # Add a small delay between requests to avoid overwhelming the API
+                # Skip delay for the last item
+                if index < total_items:
+                    time.sleep(0.1)  # 100ms delay between requests
+                    
             except Exception as e:
                 log_message(f'Error translating "{text}": {str(e)}')
                 translated_data[key] = text
@@ -222,38 +249,34 @@ class Translator:
         return translated_data
 
     def _translate_data_google(self, data: Dict[str, str]) -> Dict[str, str]:
-        """Translate data using Google Translate"""
-        try:
-            # Import here to avoid dependency issues if not used
-            from deep_translator import GoogleTranslator
+        """Translate data using Google Translate with rate limiting protection"""
+        import time
+        
+        translated_data = {}
+        total_items = len(data)
+        
+        for index, (key, text) in enumerate(data.items(), 1):
+            if not text or not isinstance(text, str):
+                # Skip empty or non-string values
+                translated_data[key] = text
+                continue
 
-            translated_data = {}
-            translator = GoogleTranslator(
-                source=self.source_language, target=self.target_language
-            )
+            try:
+                translated_text = self._translate_with_google(text)
+                log_message(f'🌐 [{index}/{total_items}] "{text}" → "{translated_text}"')
+                translated_data[key] = translated_text
+                
+                # Add a small delay between requests to avoid overwhelming the API
+                # Skip delay for the last item
+                if index < total_items:
+                    time.sleep(0.1)  # 100ms delay between requests
+                    
+            except Exception as e:
+                log_message(f'Error translating "{text}": {str(e)}')
+                translated_data[key] = text  # Keep original on error
 
-            for key, text in data.items():
-                if not text or not isinstance(text, str):
-                    # Skip empty or non-string values
-                    translated_data[key] = text
-                    continue
-
-                try:
-                    translated_text = translator.translate(text)
-                    if self.capitalize and translated_text:
-                        translated_text = translated_text.capitalize()
-                    log_message(f'🌐 "{text}" → "{translated_text}"')
-                    translated_data[key] = translated_text
-                except Exception as e:
-                    log_message(f'Error translating "{text}": {str(e)}')
-                    translated_data[key] = text  # Keep original on error
-
-            log_message(f"Successfully translated {len(data)} entries using Google Translate")
-            return translated_data
-        except ImportError:
-            print("Error: deep_translator package is required for Google translation.")
-            print("Please install it with: pip install deep-translator")
-            return data
+        log_message(f"Successfully translated {len(data)} entries using Google Translate")
+        return translated_data
 
     def translate(self, string: str) -> str:
         """
@@ -268,23 +291,34 @@ class Translator:
             return self._translate_with_google(string)
 
     def _translate_with_google(self, string: str) -> str:
-        """Translate string using Google Translate"""
-        try:
-            from deep_translator import GoogleTranslator
+        """Translate string using Google Translate with retry logic and rate limiting"""
+        
+        # Apply the retry decorator to the actual translation call
+        @self.google_retry
+        def _do_google_translation(text: str) -> str:
+            # Apply preventive delay to avoid rate limits
+            global_rate_limiter.apply_service_delay('google')
+            
+            try:
+                from deep_translator import GoogleTranslator
+            except ImportError:
+                raise ImportError("deep_translator package is required for Google translation. Install with: pip install deep-translator")
 
             translator = GoogleTranslator(
                 source=self.source_language, target=self.target_language
             )
-            translated_string = translator.translate(string)
+            translated_string = translator.translate(text)
             if self.capitalize and translated_string:
                 translated_string = translated_string.capitalize()
             return translated_string
-        except ImportError:
-            print("Error: deep_translator package is required for Google translation.")
-            print("Please install it with: pip install deep-translator")
+        
+        try:
+            return _do_google_translation(string)
+        except ImportError as e:
+            print(f"Error: {e}")
             return string
         except Exception as e:
-            log_message(f'Error translating "{string}": {str(e)}')
+            log_message(f'Google translation failed after all retries for "{string}": {str(e)}')
             return string  # Return original string on error
 
 
